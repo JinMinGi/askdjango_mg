@@ -1,0 +1,126 @@
+{% extends "blog/layout.html" %}
+
+{% block extra_head %}
+    {{ block.super }}
+<script>
+function initMap() {
+    var $map = $('#map');
+
+    if ( $map.size() > 0 ) {
+        var lat = $map.data('lat');
+        var lng = $map.data('lng');
+
+        var myLatLng = {'lat': lat, 'lng': lng};
+
+        var map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 7,
+            center: myLatLng
+        });
+
+        var marker = new google.maps.Marker({
+            position: myLatLng,
+            map: map,
+            title: 'Hello World!'
+        });
+    }
+}
+</script>
+<script async defer
+        src="https://maps.googleapis.com/maps/api/js?callback=initMap"></script>
+{% endblock %}
+
+{% block content %}
+    <h2>{{ post.title }}</h2>
+
+    <ul>
+        <li>
+            Tags :
+            {% for tag in post.tag_set.all %}
+                {{ tag.name }}
+            {% endfor %}
+        </li>
+    </ul>
+
+    {% if post.lnglat %}
+        <div id="map" data-lat="{{ post.lat }}" data-lng="{{ post.lng }}"></div>
+    {% endif %}
+
+    {% if post.photo %}
+        <img src="{{ post.photo.url }}" style="max-width: 100%;" />
+    {% endif %}
+
+    {{ post.content|linebreaks }}
+
+    <hr/>
+
+    <!-- Button trigger modal -->
+    <button type="button" class="btn btn-primary btn-block" data-toggle="modal" data-target="#ajax-comment-modal">
+        Ajax로 댓글 쓰기
+    </button>
+
+    <!-- Modal -->
+    <div class="modal fade" id="ajax-comment-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+
+        <form id="ajax_comment_form" action="{% url "blog:comment_new" post.pk %}" method="post">
+            {% csrf_token %}
+
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="myModalLabel">댓글 쓰기</h4>
+                    </div>
+                    <div class="modal-body">
+                        {{ comment_form.message }}
+                    </div>
+                    <div class="modal-footer">
+                        <input type="submit" class="btn btn-primary" value="저장" />
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        $(function() {
+            $('#ajax_comment_form').ajaxForm(function(html) {
+                $('#comment_list').prepend(html);
+                $('#ajax_comment_form')[0].reset();
+                $('#ajax-comment-modal').modal('hide');
+            });
+        });
+    </script>
+
+    <hr/>
+
+    {% comment %}
+    <form id="comment_form" action="{% url "blog:comment_new" post.pk %}" method="post">
+        {% csrf_token %}
+        {{ comment_form.message }}
+        <input type="submit" class="btn btn-primary btn-block" value="댓글 쓰기" />
+    </form>
+    <script>
+        $(function() {
+            $('#comment_form').ajaxForm(function(html) {
+                $('#comment_list').prepend(html);
+                $('#comment_form')[0].reset();
+            });
+        });
+    </script>
+    {% endcomment %}
+
+    <!--
+    <a href="{% url "blog:comment_new" post.pk %}" class="btn btn-primary btn-block">댓글쓰기</a>
+    -->
+
+    <ul id="comment_list">
+        {% include "blog/_comment_list.html" with comment_list=post.comment_set.all %}
+    </ul>
+
+    <a href="{% url "blog:comment_list" post.pk %}" class="btn btn-default btn-block ajax-load" data-target-id="comment_list">댓글 새로고침</a>
+
+    <hr/>
+    <a href="{% url "blog:post_list" %}" class="btn btn-default">목록</a>
+    <a href="{% url "blog:post_edit" post.pk %}" class="btn btn-primary">수정</a>
+
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "blog/layout.html" %}
+
+{% block content %}
+    <ul>
+    {% for post in post_list %}
+        <li>
+            [{{ post.pk }}]
+            <a href="/blog/{{ post.pk }}/">
+                {{ post.title }}
+            </a>
+            <a href="{% url "blog:post_detail" post.pk %}">
+                URL Reverse #1
+            </a>
+            <a href="{{ post.get_absolute_url }}">
+                URL Reverse #2
+            <a/>
+            <small>at {{ post.updated_at }}</small>
+        </li>
+    {% endfor %}
+    </ul>
+    <hr/>
+    <a href="{% url "blog:post_new" %}" class="btn btn-primary">새 글 쓰기</a>
+{% endblock %}
+
